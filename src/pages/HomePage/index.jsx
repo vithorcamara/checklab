@@ -56,7 +56,7 @@ export default function Home() {
   useEffect(() => {
     const buscarDadosPlanilha = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/dados');
+        const response = await axios.get('https://check-api-qpu9.onrender.com/dados');
         setDadosPlanilha(response.data);
       } catch (error) {
         console.error('Erro ao buscar dados da planilha:', error);
@@ -90,7 +90,7 @@ export default function Home() {
 
     try {
       setLoadingRegistro(true);
-      await axios.post('http://localhost:5000/addAluno', dadosParaEnviar);
+      await axios.post('https://check-api-qpu9.onrender.com/addAluno', dadosParaEnviar);
       alert('Presença registrada com sucesso!');
       setAlunoSelecionado(null);
       setDataPresenca('');
