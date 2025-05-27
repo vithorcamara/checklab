@@ -86,6 +86,7 @@ export default function Home() {
       "E-mail": alunoSelecionado["E-mail"],
       Ticket: alunoSelecionado["Ticket"],
       Data: dataPresenca,
+      "Usuário": `${dadosUsuario.nome.toLowerCase()}.${dadosUsuario.sobrenome.toLowerCase()}`,
     };
 
     try {
