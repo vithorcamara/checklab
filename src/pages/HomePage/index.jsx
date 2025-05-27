@@ -86,7 +86,7 @@ export default function Home() {
       "E-mail": alunoSelecionado["E-mail"],
       Ticket: alunoSelecionado["Ticket"],
       Data: dataPresenca,
-      "Usuário": `${dadosUsuario.nome.toLowerCase()}.${dadosUsuario.sobrenome.toLowerCase()}`,
+      "Usuário": `${dadosUsuario.nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")}.${dadosUsuario.sobrenome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")}`,
     };
 
     try {
