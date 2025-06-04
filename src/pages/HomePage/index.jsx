@@ -4,15 +4,26 @@ import { db, auth } from '../../../services/firebase';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import axios from 'axios';
+import PresencaView from '../../components/PresencaView';
+import RelatorioView from '../../components/RelatorioView';
+import CadastroView from '../../components/CadastroView';
 
 export default function Home() {
   const [usuario, setUsuario] = useState(null);
   const [dadosUsuario, setDadosUsuario] = useState(null);
   const [dadosPlanilha, setDadosPlanilha] = useState([]);
+  const [dadosRelatorio, setDadosRelatorio] = useState([]);
   const [buscaNome, setBuscaNome] = useState('');
   const [dataPresenca, setDataPresenca] = useState('');
   const [alunoSelecionado, setAlunoSelecionado] = useState(null);
   const [loadingRegistro, setLoadingRegistro] = useState(false);
+  const [abas, setAbas] = useState(['presença', 'relatórios', 'cadastro']); // Abas disponívei
+  const [aba, setAba] = useState('presença'); // Estado para abas, se necessário
+  const [nomeFiltro, setNomeFiltro] = useState("");
+  const [dataInicio, setDataInicio] = useState("");
+  const [dataFim, setDataFim] = useState("");
+  const [filtroTicket, setFiltroTicket] = useState("Todos");
+
 
   // Estados de ordenação
   const [colunaOrdenada, setColunaOrdenada] = useState('');
@@ -49,7 +60,6 @@ export default function Home() {
         console.error('Erro ao carregar dados do usuário:', error);
       }
     };
-
     carregarDadosUsuario();
   }, [usuario]);
 
@@ -63,6 +73,18 @@ export default function Home() {
       }
     };
     buscarDadosPlanilha();
+  }, []);
+
+  useEffect(() => {
+    const buscarPresença = async () => {
+      try {
+        const response = await axios.get('https://check-api-qpu9.onrender.com/resumo');
+        setDadosRelatorio(response.data);
+      } catch (error) {
+        console.error('Erro ao buscar dados da planilha:', error);
+      }
+    };
+    buscarPresença();
   }, []);
 
   const handleLogout = () => {
@@ -124,6 +146,49 @@ export default function Home() {
     aluno["Nome Social"]?.toLowerCase().includes(buscaNome.toLowerCase())
   );
 
+  const selectAba = () => {
+    switch (aba) {
+            case 'presença':
+              return (
+                <PresencaView
+                  styles={styles}
+                  buscaNome={buscaNome}
+                  setBuscaNome={setBuscaNome}
+                  dataPresenca={dataPresenca}
+                  setDataPresenca={setDataPresenca}
+                  dadosPlanilha={dadosFiltrados}
+                  alunoSelecionado={alunoSelecionado}
+                  setAlunoSelecionado={setAlunoSelecionado}
+                  loadingRegistro={loadingRegistro}
+                  registrarPresenca={registrarPresenca}
+                  handleOrdenacao={handleOrdenacao}
+                  dadosFiltrados={dadosFiltrados}
+                />
+              );
+            case 'relatórios':
+                return(
+                  <RelatorioView
+                    styles={styles}
+                    dados={dadosRelatorio}
+                    nomeFiltro={nomeFiltro}
+                    setNomeFiltro={setNomeFiltro}
+                    dataInicio={dataInicio}
+                    setDataInicio={setDataInicio}
+                    dataFim={dataFim}
+                    setDataFim={setDataFim}
+                    filtroTicket={filtroTicket}
+                    setFiltroTicket={setFiltroTicket}
+                  />
+                );
+              case 'cadastro':
+                return(
+                  <CadastroView/>
+                )
+            default:
+              return null;
+          }
+  }
+
   return (
     <div style={styles.layout}>
       <div style={styles.container}>
@@ -135,84 +200,34 @@ export default function Home() {
           )}
           <button onClick={handleLogout} style={styles.logout}>Sair</button>
         </div>
+        
+        {dadosUsuario?.organizacao === 'Embarque Digital' &&
+  dadosUsuario?.cargo === 'Administração' && (
+    <div style={styles.menuButtons}>
+      {abas.map((abaItem) => (
+        <button
+          key={abaItem}
+          onClick={() => setAba(abaItem)}
+          style={{
+            margin: '0.5rem',
+            padding: '0.5rem 1rem',
+            backgroundColor: aba === abaItem ? '#3f51b5' : '#e0e0e0',
+            color: aba === abaItem ? 'white' : '#333',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: '600',
+          }}
+        >
+          {abaItem.charAt(0).toUpperCase() + abaItem.slice(1)}
+        </button>
+      ))}
+    </div>
+)}
 
-        <div>
-          <h3>Dados da Planilha</h3>
+        
+        {selectAba()}
 
-          <input
-            type="text"
-            placeholder="Buscar por nome..."
-            value={buscaNome}
-            onChange={(e) => setBuscaNome(e.target.value)}
-            style={styles.inputBusca}
-          />
-
-          <input
-            type="date"
-            value={dataPresenca}
-            onChange={(e) => setDataPresenca(e.target.value)}
-            style={styles.inputData}
-          />
-
-          <button
-            onClick={registrarPresenca}
-            disabled={loadingRegistro}
-            style={styles.botaoRegistrar}
-          >
-            {loadingRegistro ? 'Registrando...' : 'Registrar Presença'}
-          </button>
-        </div>
-
-        <div style={styles.listContainer}>
-          {dadosPlanilha.length === 0 ? (
-            <p>Carregando dados...</p>
-          ) : (
-            <table className="min-w-full bg-white border rounded-xl shadow" style={{ marginTop: '1rem' }}>
-              <thead>
-                <tr className="bg-gray-200 text-gray-700 text-left text-sm">
-                  <th className="py-2 px-4"></th>
-                  <th className="py-2 px-4 cursor-pointer" onClick={() => handleOrdenacao("Nome Social")}>Nome</th>
-                  <th className="py-2 px-4 cursor-pointer" onClick={() => handleOrdenacao("Matrícula")}>Matrícula</th>
-                  <th className="py-2 px-4 cursor-pointer" onClick={() => handleOrdenacao("Curso")}>Curso</th>
-                  <th className="py-2 px-4 cursor-pointer" onClick={() => handleOrdenacao("Turno")}>Turno</th>
-                  <th className="py-2 px-4 cursor-pointer" onClick={() => handleOrdenacao("E-mail")}>E-mail</th>
-                  <th className="py-2 px-4 cursor-pointer" onClick={() => handleOrdenacao("IES")}>IES</th>
-                  <th className="py-2 px-4 cursor-pointer" onClick={() => handleOrdenacao("Ticket")}>Ticket</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dadosFiltrados.map((aluno, index) => (
-                  <tr
-                    key={index}
-                    className="border-t hover:bg-gray-50"
-                    style={{
-                      backgroundColor: alunoSelecionado === aluno ? '#e0f7fa' : 'transparent',
-                      cursor: 'pointer',
-                    }}
-                    onClick={() => setAlunoSelecionado(aluno)}
-                  >
-                    <td className="py-2 px-4">
-                      <input
-                        type="radio"
-                        name="alunoSelecionado"
-                        checked={alunoSelecionado === aluno}
-                        onChange={() => setAlunoSelecionado(aluno)}
-                        style={{ display: 'none' }}
-                      />
-                    </td>
-                    <td className="py-2 px-4">{aluno["Nome Social"]}</td>
-                    <td className="py-2 px-4">{aluno["Matrícula"]}</td>
-                    <td className="py-2 px-4">{aluno["Curso"]}</td>
-                    <td className="py-2 px-4">{aluno["Turno"]}</td>
-                    <td className="py-2 px-4">{aluno["E-mail"]}</td>
-                    <td className="py-2 px-4">{aluno["IES"]}</td>
-                    <td className="py-2 px-4">{aluno["Ticket"] === "TRUE" ? "Sim" : "Não"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
       </div>
     </div>
   );
@@ -228,4 +243,5 @@ const styles = {
   inputBusca: { padding: '0.7rem 1rem', width: '280px', fontSize: '1rem', borderRadius: '8px', border: '1.5px solid #ccc', outline: 'none', transition: 'border-color 0.3s ease' },
   inputData: { marginLeft: '1.2rem', padding: '0.7rem 1rem', fontSize: '1rem', borderRadius: '8px', border: '1.5px solid #ccc', outline: 'none', transition: 'border-color 0.3s ease' },
   botaoRegistrar: { marginLeft: '1.2rem', backgroundColor: '#3f51b5', color: 'white', border: 'none', padding: '0.7rem 1.5rem', cursor: 'pointer', borderRadius: '8px', fontWeight: '600', boxShadow: '0 3px 8px rgb(63 81 181 / 0.4)', transition: 'background-color 0.3s ease, box-shadow 0.3s ease' },
+  menuButtons: { display: 'flex', width: '100vw', justifyContent: 'center', marginBottom: '1rem' },
 };
