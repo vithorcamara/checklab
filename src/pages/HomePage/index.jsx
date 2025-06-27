@@ -202,7 +202,7 @@ export default function Home() {
         </div>
         
         {dadosUsuario?.organizacao === 'Embarque Digital' &&
-  (dadosUsuario?.cargo === 'Administração' || dadosUsuario?.cargo === 'Suporte de T.I.') && (
+  (dadosUsuario?.cargo === 'Administração' || dadosUsuario?.cargo === 'Suporte de TI') && (
     <div style={styles.menuButtons}>
       {abas.map((abaItem) => (
         <button
