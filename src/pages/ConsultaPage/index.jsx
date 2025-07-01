@@ -29,7 +29,6 @@ export default function ConsultaRestrita() {
     const buscarPresencas = async () => {
       try {
         const response = await axios.get("https://check-api-qpu9.onrender.com/resumo");
-        console.log("Dados recebidos:", response.data);
         setDados(response.data);
       } catch (error) {
         console.error("Erro ao buscar dados de presença:", error);
