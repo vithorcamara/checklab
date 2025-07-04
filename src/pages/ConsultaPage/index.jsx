@@ -51,7 +51,7 @@ export default function ConsultaRestrita() {
     const anoMat = parseInt(matriculaStr.slice(0, 4), 10);
     const semestreMat = parseInt(matriculaStr.slice(4, 5), 10);
 
-    const periodo = (anoAtual - anoMat) * 2 + (semestreAtual - semestreMat) + 2;
+    const periodo = (anoAtual - anoMat) * 2 + (semestreAtual - semestreMat) + 1;
 
     if (periodo > 5) {
       return { periodoStr: "Egresso", egresso: true };
