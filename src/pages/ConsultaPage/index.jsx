@@ -113,7 +113,7 @@ export default function ConsultaRestrita() {
       <div style={styles.filtros}>
         <input
           type="text"
-          placeholder="Digite seu CPF"
+          placeholder="000.000.000-00"
           value={cpf}
           onChange={(e) => {
             setCpf(e.target.value);
