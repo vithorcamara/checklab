@@ -101,6 +101,7 @@ export default function Home() {
     const dadosParaEnviar = {
       ID: alunoSelecionado["ID"],
       "Nome Social": alunoSelecionado["Nome Social"],
+      "CPF": alunoSelecionado["CPF"],
       "Matrícula": alunoSelecionado["Matrícula"],
       IES: alunoSelecionado["IES"],
       Curso: alunoSelecionado["Curso"],
